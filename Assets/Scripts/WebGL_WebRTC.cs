@@ -12,7 +12,6 @@ public class WebGL_WebRTC : MonoBehaviour
     [SerializeField] private RawImage _localPreview;
     [SerializeField] private RawImage _remotePreview;
 
-    private RenderTexture _captureTexture;
     private RenderTexture _sendTexture;
     private RenderTexture _receiveTexture;
     private IntPtr _receiveTexturePtr;
@@ -33,13 +32,6 @@ public class WebGL_WebRTC : MonoBehaviour
 
     private void NativeWebRTC_Setup()
     {
-        _captureTexture = new RenderTexture(
-            _sendWidth,
-            _sendHeight,
-            24,
-            RenderTextureFormat.ARGB32,
-            0
-        );
         _sendTexture = new RenderTexture(
             _sendWidth,
             _sendHeight,
@@ -50,8 +42,8 @@ public class WebGL_WebRTC : MonoBehaviour
         _sendTexture.Create();
         _ = _sendTexture.colorBuffer;
         var sendTexturePtr = _sendTexture.GetNativeTexturePtr();
-        _streamCamera.targetTexture = _captureTexture;
-        _localPreview.texture = _captureTexture;
+        _streamCamera.targetTexture = _sendTexture;
+        _localPreview.texture = _sendTexture;
         NativeWebRTC.Setup(
             _signalingServerUrl,
             _sendWidth,
@@ -89,10 +81,7 @@ public class WebGL_WebRTC : MonoBehaviour
     private void Update()
     {
         if (_isRenderLocalVideo)
-        {
-            Graphics.Blit(_captureTexture, _sendTexture);
             NativeWebRTC.RenderLocalVideoTrack();
-        }
 
         if (_isRenderRemoteVideo)
             NativeWebRTC.RenderRemoteVideoTrack(_receiveTexturePtr);
