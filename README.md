@@ -31,7 +31,6 @@ Click the [Connect] button in index.html, then click the [Connect] button in Uni
 This will initiate negotiation, and both parties' images will be displayed on the screen.  
 
 # Known Issues
-The Unity implementation uses Graphics.Blit(). Graphics.Blit() is deprecated in URP, so this repository's project does not support URP.  
 It may be possible to run it by replacing Graphics.Blit() with something that uses the RenderPass/Blitter API, but I don't currently have the skills to do so.  
 Also, the video sent from Unity is upside down, and in index.html it is displayed upside down using CSS style.  
 This test project does not support perfect negotiation, so you must click the [Connect] button in index.html, then the Unity WebGL [Connect] button.  
