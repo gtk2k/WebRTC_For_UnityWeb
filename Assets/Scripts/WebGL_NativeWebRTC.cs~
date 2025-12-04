@@ -1,0 +1,44 @@
+﻿using UnityEngine;
+using System.Runtime.InteropServices;
+using System;
+using AOT;
+
+public class WebGL_NativeWebRTC
+{
+    public static event Action OnLocalVideoTrack;
+    public static event Action<int, int> OnRemoteVideoTrack;
+
+    public static RenderTexture RemoteVideoTrackTexture = null;
+    public static IntPtr RemoteVideoTrackTexturePtr = IntPtr.Zero;
+ 
+    [MonoPInvokeCallback(typeof(Action))]
+    public static void WebGL_OnLocalVideoTrackCreated()
+    {
+        OnLocalVideoTrack?.Invoke();
+    }
+
+    [MonoPInvokeCallback(typeof(Action<int, int>))]
+    public static void WebGL_OnRemoteVideoTrackGenerated(int width, int height)
+    {
+        OnRemoteVideoTrack?.Invoke(width, height);
+    }
+
+    [DllImport("__Internal")]
+    public static extern void WebGL_Setup(
+        string signalingServerUrl,
+        int sendWidth,
+        int sendHeight,
+        IntPtr sendTexturePtr,
+        Action dlgOnLocalVideoTrackCreated,
+        Action<int, int> dlgOnRemoteVideoTrackGenerated);
+
+    [DllImport("__Internal")]
+    public static extern void WebGL_Connect();
+
+    [DllImport("__Internal")]
+    public static extern void WebGL_RenderLocalVideoTrack();
+
+    [DllImport("__Internal")]
+    public static extern void WebGL_RenderRemoteVideoTrack(IntPtr RemoteVideoTrackTexturePtr);
+}
+
