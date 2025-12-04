@@ -36,11 +36,10 @@ public class WebGPU_WebRTC : MonoBehaviour
         _sendTexture = new RenderTexture(
             _sendWidth,
             _sendHeight,
-            0,
+            24,
             RenderTextureFormat.ARGB32,
             0
         );
-        _sendTexture.enableRandomWrite = true;
         _sendTexture.Create();
         _ = _sendTexture.colorBuffer;
         var sendTexturePtr = _sendTexture.GetNativeTexturePtr();
@@ -64,22 +63,21 @@ public class WebGPU_WebRTC : MonoBehaviour
 
     private void OnLocalVideoTrack()
     {
-        Debug.Log($"=-== OnLocalVideoTrack");
         _isRenderLocalVideo = true;
     }
 
     private void OnRemoteVideoTrack(int width, int height)
-    {        
+    {
         if (_receiveTexture != null)
         {
             _receiveTexture.Release();
             DestroyImmediate(_receiveTexture);
         }
         _receiveTexture = new RenderTexture(
-            width, 
-            height, 
-            0, 
-            RenderTextureFormat.ARGB32, 
+            width,
+            height,
+            0,
+            RenderTextureFormat.ARGB32,
             0
         );
         _receiveTexture.enableRandomWrite = true;

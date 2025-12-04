@@ -99,3 +99,5 @@ InitTestScene*.unity*
 /[Aa]ssets/[Ii]nit[Tt]est[Ss]cene*.unity*
 Assets/TextMesh Pro
 WebGL_Build
+WebGPU_Build/WebGPU_Build
+Assets/.DS_Store

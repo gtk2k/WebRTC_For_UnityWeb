@@ -39,7 +39,7 @@ var WebGpuNativeWebRTC = {
         webgpu_o.sendWidth = sendWidth;
         webgpu_o.sendHeight = sendHeight;
         webgpu_o.sendFPS = !!sendFPS ? sendFPS : 30;
-        webgpu_o.sendTexture = webgpu_o.device.derivedObjects.get(sendTexturePtr);
+        webgpu_o.sendTexture = wgpu[sendTexturePtr];
         // webgpu_o.buffer = webgpu_o.device.createBuffer({
         //     size: sendWidth * sendHeight * 4,
         //     usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ
@@ -183,20 +183,15 @@ var WebGpuNativeWebRTC = {
         // Capture stream at specific frame rate
         var stream = webgpu_o.cnv.captureStream(webgpu_o.sendFPS); // 30 fps
         var track = stream.getVideoTracks()[0];
-
-        document.documentElement.appendChild(webgpu_o.cnv);
-        webgpu_o.cnv.style.position = 'absolute';
-        webgpu_o.cnv.style.left = webgpu_o.cnv.top = 0;
-
         webgpu_o.pc.addTrack(track, stream);
         console.log('=-== Video track added to peer connection');
     },
 
     WebGpuRenderLocalVideoTrack: function () {
         try {
-            var start = Date.now();
             if (webgpu_o.isLocalTrackRendering) {
                 console.log('=-== Skip Frame Rendering of LocalVideoTrack');
+                return;
             }
             webgpu_o.isLocalTrackRendering = true;
             var commandEncoder = webgpu_o.device.createCommandEncoder();
@@ -206,7 +201,10 @@ var WebGpuNativeWebRTC = {
             });
             commandEncoder.copyTextureToBuffer(
                 { texture: webgpu_o.sendTexture },
-                { buffer: webgpu_o.buffer },
+                { 
+                    buffer: webgpu_o.buffer, 
+                    bytesPerRow: webgpu_o.sendWidth * 4 
+                },
                 {
                     width: webgpu_o.sendWidth,
                     height: webgpu_o.sendHeight
@@ -215,13 +213,12 @@ var WebGpuNativeWebRTC = {
             webgpu_o.device.queue.submit([commandEncoder.finish()]);
             webgpu_o.buffer.mapAsync(GPUMapMode.READ).then(function () {
                 var arrayBuffer = webgpu_o.buffer.getMappedRange();
-                webgpu_o.imageData.data.set(arrayBuffer);
+                webgpu_o.imageData.data.set(new Uint8ClampedArray(arrayBuffer));
                 webgpu_o.ctx.putImageData(webgpu_o.imageData, 0, 0);
                 webgpu_o.buffer.unmap();
                 webgpu_o.buffer.destroy();
                 arrayBuffer = null;
                 webgpu_o.isLocalTrackRendering = false;
-                console.log('=-== Local Render End: ' + (Date.now() - start));
             });
         } catch (error) {
             console.error('=-== RenderLocalVideoTrack error:', error);
