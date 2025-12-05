@@ -1,6 +1,7 @@
 # WebRTC_For_UnityWeb
 This is a test implementation of video chat using WebRTC with Unity's Web.
-Only video communication is implemented; audio communication and DataChannel are not.
+Only video communication is implemented.  
+audio communication and DataChannel are not.
 
 Unity version confirmed to work: 6.2
 
