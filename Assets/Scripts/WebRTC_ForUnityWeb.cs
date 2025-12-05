@@ -2,16 +2,18 @@ using System;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class WebGL_WebRTC : MonoBehaviour
+public class WebRTC_ForUnityWeb : MonoBehaviour
 {
     [SerializeField] private string _signalingServerUrl;
     [SerializeField] private int _sendWidth;
     [SerializeField] private int _sendHeight;
+    [SerializeField] private int _videoFrameRate;
     [SerializeField] private Camera _streamCamera;
     [SerializeField] private Button _button;
     [SerializeField] private RawImage _localPreview;
     [SerializeField] private RawImage _remotePreview;
 
+    private bool _isWebGPU;
     private RenderTexture _sendTexture;
     private RenderTexture _receiveTexture;
     private IntPtr _receiveTexturePtr;
@@ -20,17 +22,24 @@ public class WebGL_WebRTC : MonoBehaviour
 
     private void Awake()
     {
-        NativeWebRTC.OnLocalVideoTrack += OnLocalVideoTrack;
-        NativeWebRTC.OnRemoteVideoTrack += OnRemoteVideoTrack;
+        WebRtcForUnityWebLib.OnLocalVideoTrack += OnLocalVideoTrack;
+        WebRtcForUnityWebLib.OnRemoteVideoTrack += OnRemoteVideoTrack;
     }
 
     void Start()
     {
-        NativeWebRTC_Setup();
+        Debug.Log($"=-== Application.platform: {Application.platform}");
+        _isWebGPU = SystemInfo.graphicsDeviceType == UnityEngine.Rendering.GraphicsDeviceType.WebGPU;
+        Setup();
         _button.onClick.AddListener(Connect);
     }
 
-    private void NativeWebRTC_Setup()
+    private void Update()
+    {
+        RenderVideoTrack();
+    }
+
+    private void Setup()
     {
         _sendTexture = new RenderTexture(
             _sendWidth,
@@ -44,33 +53,38 @@ public class WebGL_WebRTC : MonoBehaviour
         var sendTexturePtr = _sendTexture.GetNativeTexturePtr();
         _streamCamera.targetTexture = _sendTexture;
         _localPreview.texture = _sendTexture;
-        NativeWebRTC.Setup(
+        WebRtcForUnityWebLib.WebRtcForUnityWebSetup(
+            _isWebGPU ? 1 : 0,
             _signalingServerUrl,
             _sendWidth,
             _sendHeight,
+            _videoFrameRate,
             sendTexturePtr,
-            NativeWebRTC.OnLocalVideoTrackCreated,
-            NativeWebRTC.OnRemoteVideoTrackGenerated
+            WebRtcForUnityWebLib.OnLocalVideoTrackCreated,
+            WebRtcForUnityWebLib.OnRemoteVideoTrackGenerated
         );
     }
 
     private void Connect()
     {
-        NativeWebRTC.Connect();
+        WebRtcForUnityWebLib.WebRtcForUnityWebConnect();
     }
 
     private void OnLocalVideoTrack()
     {
+        Debug.Log($"=-== OnLocalVideoTrack");
         _isRenderLocalVideo = true;
     }
 
     private void OnRemoteVideoTrack(int width, int height)
     {
+        Debug.Log($"=-== OnRemoteVideoTrack: {width}x{height}");
         if (_receiveTexture != null)
         {
             _receiveTexture.Release();
             DestroyImmediate(_receiveTexture);
         }
+
         _receiveTexture = new RenderTexture(width, height, 0, RenderTextureFormat.ARGB32, 0);
         _ = _receiveTexture.colorBuffer;
         _receiveTexturePtr = _receiveTexture.GetNativeTexturePtr();
@@ -78,12 +92,32 @@ public class WebGL_WebRTC : MonoBehaviour
         _isRenderRemoteVideo = true;
     }
 
-    private void Update()
+    private void RenderVideoTrack()
     {
+        if (Application.platform != RuntimePlatform.WebGLPlayer) return;
+
         if (_isRenderLocalVideo)
-            NativeWebRTC.RenderLocalVideoTrack();
+        {
+            if (_isWebGPU)
+            {
+                WebRtcForUnityWebLib.WebRtcForUnityWebRenderLocalVideoTrackWebGPU();
+            }
+            else
+            {
+                WebRtcForUnityWebLib.WebRtcForUnityWebRenderLocalVideoTrackWebGL();
+            }
+        }
 
         if (_isRenderRemoteVideo)
-            NativeWebRTC.RenderRemoteVideoTrack(_receiveTexturePtr);
+        {
+            if (_isWebGPU)
+            {
+                WebRtcForUnityWebLib.WebRtcForUnityWebRenderRemoteVideoTrackWebGPU(_receiveTexturePtr);
+            }
+            else
+            {
+                WebRtcForUnityWebLib.WebRtcForUnityWebRenderRemoteVideoTrackWebGL(_receiveTexturePtr);
+            }
+        }
     }
 }
