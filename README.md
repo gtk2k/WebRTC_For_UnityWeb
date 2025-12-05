@@ -4,9 +4,6 @@ Only video communication is implemented; audio communication and DataChannel are
 
 Unity version confirmed to work: 6.2
 
-# Graphics API `WebGPU` is not supported.
-It is implemented using GLctx, it does not support Graphics API: `WebGPU`
-
 # Execution Steps
 ### 1. Clone the Repository
 Clone the repository.  
