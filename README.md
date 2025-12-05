@@ -1,4 +1,4 @@
-# UnityWebGL_WebRTC_Test
+# WebRTC_For_UnityWeb
 This is a test implementation of video chat using WebRTC with Unity's WebGL.
 Only video communication is implemented; audio communication and DataChannel are not.
 
